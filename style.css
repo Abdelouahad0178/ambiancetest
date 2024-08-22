@@ -1,4 +1,3 @@
-/* Styles généraux */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -18,9 +17,10 @@ h1 {
 #scene-container {
     background-color: #ffffff;
     border: 1px solid #ccc;
+    width: 70%;
+    height: 70vh;
 }
 
-/* Styles pour les boutons */
 .controls {
     margin-top: 20px;
     text-align: center;
@@ -87,17 +87,12 @@ button:hover {
         padding: 7px 14px;
         font-size: 13px;
     }
-
-
-
-.controls{
-        text-align: center;
-    margin-top: 53%;
-    COLOR: WHITE;
-
 }
 
-    
+.controls {
+    text-align: center;
+    margin-top: 53%;
+    color: white;
 }
 
 /* Largeur d'écran entre 425px et 769px */
@@ -110,14 +105,6 @@ button:hover {
         padding: 6px 12px;
         font-size: 12px;
     }
-
-  
-.controls{
-        text-align: center;
-    margin-top: 53%;
-    COLOR: WHITE;
-
-}
 }
 
 /* Largeur d'écran entre 412px et 424px */
@@ -130,17 +117,6 @@ button:hover {
         padding: 5px 10px;
         font-size: 11px;
     }
-  
-    .controls{
-        text-align: center;
-    margin-top: 53%;
-    COLOR: WHITE;
-
-}
-
-
-
-
 }
 
 /* Largeur d'écran entre 375px et 411px */
@@ -153,16 +129,9 @@ button:hover {
         padding: 5px 10px;
         font-size: 11px;
     }
-      
-.controls{
-    text-align: center;
-margin-top: 53%;
-COLOR: WHITE;
-
-}
 }
 
-/* Largeur d'écran ≤ 375px */
+/* Largeur d'écran ≤ 374px */
 @media screen and (max-width: 374px) {
     #scene-container {
         width: 100%;

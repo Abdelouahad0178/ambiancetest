@@ -1,32 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualisation 3D de Pièce</title>
-    <!-- Lien vers la feuille de style CSS -->
+    <title>Visualisateur 3D de Pièce</title>
     <link rel="stylesheet" href="style.css">
-
-    <!-- CDN pour Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <!-- Lien vers votre fichier JavaScript -->
-    <script defer src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <h1>Visualisation 3D de Pièce</h1>
+    <header>
+        <h1>Visualisateur 3D de Pièce</h1>
+    </header>
 
-    <div id="scene-container"></div>
+    <main>
+        <div id="scene-container" aria-label="Scène 3D de la pièce"></div>
 
-    <div class="controls">
-        <button id="floorTexture1">Texture Sol 1</button>
-        <button id="floorTexture2">Texture Sol 2</button>
-        <br>
-        <button id="wallTexture1">Texture Mur de Face</button>
-        <button id="wallTexture2">Texture Mur Gauche</button>
-        <br>
-        <button id="fileInputTrigger">Choisir un fichier</button>
-        <input type="file" id="fileInput" accept="image/*">
-    </div>
+        <div class="controls">
+            <h2>Contrôles de Texture</h2>
+            <div class="button-group">
+                <h3>Texture du Sol</h3>
+                <button id="floorTexture1">Texture Sol 1</button>
+                <button id="floorTexture2">Texture Sol 2</button>
+            </div>
+            <div class="button-group">
+                <h3>Texture des Murs</h3>
+                <button id="wallTexture1">Texture Murs 1</button>
+                <button id="wallTexture2">Texture Murs 2</button>
+            </div>
+            <div class="file-input-group">
+                <h3>Charger une Texture Personnalisée</h3>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Visualisateur 3D de Pièce. Tous droits réservés.</p>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>

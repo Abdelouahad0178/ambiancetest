@@ -1,6 +1,8 @@
 // Variables globales pour la scène, la caméra et le renderer
 let scene, camera, renderer;
 let floor, walls = [];
+let isDragging = false; // Déclaration de isDragging
+const moveSpeed = 0.01; // Déclaration de moveSpeed, vitesse de déplacement
 
 // Définition des textures par défaut pour le sol et les murs
 const defaultTextures = {
@@ -57,6 +59,11 @@ function init() {
     document.getElementById('wallTexture2').addEventListener('click', () => {
         importTexture('wall2');
     });
+
+    // Ajouter les gestionnaires d'événements pour les mouvements de la souris
+    document.addEventListener('mousedown', onMouseDown, false);
+    document.addEventListener('mousemove', onMouseMove, false);
+    document.addEventListener('mouseup', onMouseUp, false);
 }
 
 // Fonction pour créer un matériau plus lumineux et réfléchissant pour les surfaces
@@ -83,12 +90,13 @@ function createFloor(texture) {
 
 // Fonction pour créer et ajouter le mur de face à la scène
 function createFrontWall(texture) {
-    const wallGeometry = new THREE.PlaneGeometry(5, 8);  // Définition de la géométrie du mur de face
+    const wallGeometry = new THREE.PlaneGeometry(5, 5);  // Ajustement de la hauteur du mur de face à 5 unités
     const wallMaterial = createMaterial(texture);  // Création du matériau avec la texture spécifiée
 
     const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.y = 1.5;  // Positionnement vertical pour que le mur touche le sol
+    wall.position.y = 2.5;  // Positionnement vertical pour que le mur soit aligné avec le mur gauche
     wall.position.z = -2.5;  // Positionnement pour que le mur soit en arrière de la scène
+    adjustUVs(wall.geometry.attributes.uv.array, 0.35);  // Ajuster les UVs pour occuper 35% du mur
     scene.add(wall);  // Ajout du mur de face à la scène
 
     walls[0] = wall;  // Stockage du mur de face dans le tableau des murs
@@ -106,11 +114,20 @@ function createLeftWall(texture) {
     wall.position.x = -2.2;  // Positionnement à gauche du mur de face
     wall.position.z = -0.01;  // Légère avance sur le mur de face pour éviter le chevauchement
     wall.rotation.y = Math.PI / 2.1;  // Rotation pour un angle supérieur à 90 degrés
+    adjustUVs(wall.geometry.attributes.uv.array, 0.35);  // Ajuster les UVs pour occuper 35% du mur
     scene.add(wall);  // Ajout du mur gauche à la scène
 
     walls[1] = wall;  // Stockage du mur gauche dans le tableau des murs
 
     renderer.render(scene, camera);  // Rendu de la scène après l'ajout du mur gauche
+}
+
+// Fonction pour ajuster les coordonnées UV pour que les textures n'occupent que 35 % en hauteur du mur
+function adjustUVs(uvs, scaleFactor) {
+    for (let i = 0; i < uvs.length; i += 2) {
+        uvs[i + 1] = (1 - uvs[i + 1]) * scaleFactor + (1 - scaleFactor);  // Limiter à 35% du haut du mur
+    }
+    return uvs;
 }
 
 // Fonction pour charger une texture depuis une URL avec une option de repli en cas d'échec
@@ -197,6 +214,43 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;  // Mettre à jour le ratio d'aspect
     camera.updateProjectionMatrix();  // Mettre à jour la matrice de projection de la caméra
     renderer.setSize(window.innerWidth, window.innerHeight);  // Redimensionner le renderer
+}
+
+// Gestionnaires d'événements pour les mouvements de la souris
+function onMouseDown(event) {
+    isDragging = true;
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+}
+
+function onMouseMove(event) {
+    if (isDragging) {
+        const deltaMove = {
+            x: event.clientX - previousMousePosition.x,
+            y: event.clientY - previousMousePosition.y
+        };
+
+        const deltaRotationQuaternion = new THREE.Quaternion()
+            .setFromEuler(new THREE.Euler(
+                deltaMove.y * moveSpeed,
+                deltaMove.x * moveSpeed,
+                0,
+                'XYZ'
+            ));
+
+        camera.quaternion.multiplyQuaternions(deltaRotationQuaternion, camera.quaternion);
+
+        previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+}
+
+function onMouseUp() {
+    isDragging = false;
 }
 
 // Initialisation de la scène et démarrage de l'animation

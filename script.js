@@ -1,18 +1,20 @@
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
 // Variables globales pour la scène, la caméra et le renderer
 let scene, camera, renderer;
 let floor, walls = [];
-let isDragging = false; // Déclaration de isDragging
-const moveSpeed = 0.01; // Déclaration de moveSpeed, vitesse de déplacement
+let controls; // Déclaration de la variable pour OrbitControls
+let isDragging = false; // Déclaration pour les mouvements
+let previousMousePosition = { x: 0, y: 0 }; // Position précédente de la souris/tactile
+let touchStartPosition = { x: 0, y: 0 }; // Position de départ du toucher
 
 // Définition des textures par défaut pour le sol et les murs
 const defaultTextures = {
     floor: 'images/CORE_DECOR_COLD_60X60.jpg',  // Texture par défaut pour le sol
-    wall1: 'images/1Chalet_Cervinia-honey_20_122cm.jpg',  // Texture par défaut pour le mur de face (dominant)
+    wall1: 'images/1ANIKSA_PULIDO_120x260.jpg',  // Texture par défaut pour le mur de face (dominant)
     wall2: 'images/DUC_BLANC_BURGUINI_S.T_89.8x269.8.jpg'  // Texture par défaut pour le mur gauche (1/2 largeur)
 };
-
-// Chemin vers le dossier contenant les images dynamiques
-const dynamicTexturesPath = 'images/';
 
 // Fonction d'initialisation de la scène 3D
 function init() {
@@ -24,30 +26,36 @@ function init() {
     camera.position.set(0, 3, 7);  // Positionnement de la caméra
     camera.lookAt(0, 0, 0);  // Orientation de la caméra vers le centre de la scène
 
-    // Initialisation du renderer avec anti-aliasing pour lisser les bords
+    // Initialisation du renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);  // Taille du renderer adaptée à la fenêtre
+    renderer.setSize(window.innerWidth, window.innerHeight);  // Taille du renderer
     renderer.setPixelRatio(window.devicePixelRatio);  // Support de la haute résolution
     document.getElementById('scene-container').appendChild(renderer.domElement);  // Ajout du renderer à la page
 
-    // Ajout d'une lumière ambiante pour un éclairage global uniforme
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);  // Intensité de la lumière réglée à 1 pour plus de clarté
+    // Initialisation d'OrbitControls
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Activation de l’amortissement (inertie)
+    controls.dampingFactor = 0.25; // Facteur d’amortissement
+    controls.screenSpacePanning = false; // Ne pas autoriser le déplacement sur l’écran
+    controls.maxPolarAngle = Math.PI / 2; // Limiter l’angle d’élévation de la caméra à 90 degrés
+
+    // Ajout de lumières
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
-    // Ajout d'une lumière directionnelle pour simuler une source de lumière naturelle
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);  // Intensité également à 1
-    directionalLight.position.set(5, 5, 5);  // Positionnement de la lumière pour éclairer la scène
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Charger les textures par défaut pour le sol et les murs
+    // Chargement des textures
     loadTexture(defaultTextures.floor, createFloor);
     loadTexture(defaultTextures.wall1, createFrontWall);
     loadTexture(defaultTextures.wall2, createLeftWall);
 
-    // Gestion du redimensionnement de la fenêtre pour ajuster la caméra et le renderer
+    // Gestion du redimensionnement de la fenêtre
     window.addEventListener('resize', onWindowResize, false);
 
-    // Ajouter les événements de clic sur le sol et les murs pour permettre l'importation d'une nouvelle texture
+    // Événements pour changer les textures
     document.getElementById('floorTexture1').addEventListener('click', () => {
         importTexture('floor');
     });
@@ -60,163 +68,17 @@ function init() {
         importTexture('wall2');
     });
 
-    // Ajouter les gestionnaires d'événements pour les mouvements de la souris
+    // Gestion des événements de la souris et tactiles
     document.addEventListener('mousedown', onMouseDown, false);
     document.addEventListener('mousemove', onMouseMove, false);
     document.addEventListener('mouseup', onMouseUp, false);
+
+    document.addEventListener('touchstart', onTouchStart, false);
+    document.addEventListener('touchmove', onTouchMove, false);
+    document.addEventListener('touchend', onTouchEnd, false);
 }
 
-// Fonction pour créer un matériau plus lumineux et réfléchissant pour les surfaces
-function createMaterial(texture) {
-    return new THREE.MeshStandardMaterial({
-        map: texture,  // Appliquer la texture
-        roughness: 0.4,  // Réduire la rugosité pour un effet plus brillant
-        metalness: 0.1,  // Ajouter un peu de métallisation pour refléter plus de lumière
-        emissive: new THREE.Color(0x202020),  // Couleur émissive pour ajouter un peu plus de luminosité
-        emissiveIntensity: 0.3  // Intensité de la lumière émise pour augmenter la clarté
-    });
-}
-
-// Fonction pour créer et ajouter le sol à la scène
-function createFloor(texture) {
-    const floorGeometry = new THREE.PlaneGeometry(5, 5);  // Définition de la géométrie du sol
-    const floorMaterial = createMaterial(texture);  // Création du matériau avec la texture spécifiée
-    floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;  // Rotation pour aligner le sol horizontalement
-    scene.add(floor);  // Ajout du sol à la scène
-    
-    renderer.render(scene, camera);  // Rendu de la scène après l'ajout du sol
-}
-
-// Fonction pour créer et ajouter le mur de face à la scène
-function createFrontWall(texture) {
-    const wallGeometry = new THREE.PlaneGeometry(5, 5);  // Ajustement de la hauteur du mur de face à 5 unités
-    const wallMaterial = createMaterial(texture);  // Création du matériau avec la texture spécifiée
-
-    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.y = 2.5;  // Positionnement vertical pour que le mur soit aligné avec le mur gauche
-    wall.position.z = -2.5;  // Positionnement pour que le mur soit en arrière de la scène
-    adjustUVs(wall.geometry.attributes.uv.array, 0.35);  // Ajuster les UVs pour occuper 35% du mur
-    scene.add(wall);  // Ajout du mur de face à la scène
-
-    walls[0] = wall;  // Stockage du mur de face dans le tableau des murs
-
-    renderer.render(scene, camera);  // Rendu de la scène après l'ajout du mur de face
-}
-
-// Fonction pour créer et ajouter le mur gauche à la scène
-function createLeftWall(texture) {
-    const wallGeometry = new THREE.PlaneGeometry(2.5, 5);  // Définition de la géométrie du mur gauche (1/2 largeur)
-    const wallMaterial = createMaterial(texture);  // Création du matériau avec la texture spécifiée
-
-    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.y = 2.5;  // Positionnement vertical pour aligner avec le mur de face
-    wall.position.x = -2.2;  // Positionnement à gauche du mur de face
-    wall.position.z = -0.01;  // Légère avance sur le mur de face pour éviter le chevauchement
-    wall.rotation.y = Math.PI / 2.1;  // Rotation pour un angle supérieur à 90 degrés
-    adjustUVs(wall.geometry.attributes.uv.array, 0.35);  // Ajuster les UVs pour occuper 35% du mur
-    scene.add(wall);  // Ajout du mur gauche à la scène
-
-    walls[1] = wall;  // Stockage du mur gauche dans le tableau des murs
-
-    renderer.render(scene, camera);  // Rendu de la scène après l'ajout du mur gauche
-}
-
-// Fonction pour ajuster les coordonnées UV pour que les textures n'occupent que 35 % en hauteur du mur
-function adjustUVs(uvs, scaleFactor) {
-    for (let i = 0; i < uvs.length; i += 2) {
-        uvs[i + 1] = (1 - uvs[i + 1]) * scaleFactor + (1 - scaleFactor);  // Limiter à 35% du haut du mur
-    }
-    return uvs;
-}
-
-// Fonction pour charger une texture depuis une URL avec une option de repli en cas d'échec
-function loadTexture(url, onLoad) {
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(
-        url,
-        function(texture) {
-            texture.encoding = THREE.sRGBEncoding;  // Encodage pour améliorer la qualité des couleurs
-            onLoad(texture);  // Exécuter la fonction de création (sol ou mur) après chargement de la texture
-        },
-        undefined,
-        function(error) {
-            console.warn(`Erreur lors du chargement de la texture : ${url}, utilisation de la texture par défaut.`);
-        }
-    );
-}
-
-// Fonction pour importer et appliquer une nouvelle texture
-function importTexture(target) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const textureURL = e.target.result;  // Charger la texture à partir du fichier sélectionné
-                if (target === 'floor') {
-                    changeFloorTexture(textureURL);  // Appliquer la texture au sol
-                } else if (target === 'wall1') {
-                    changeFrontWallTexture(textureURL);  // Appliquer la texture au mur de face
-                } else if (target === 'wall2') {
-                    changeLeftWallTexture(textureURL);  // Appliquer la texture au mur gauche
-                }
-            };
-            reader.readAsDataURL(file);  // Lire le fichier sélectionné comme URL de données
-        }
-    });
-
-    input.click();  // Ouvre le sélecteur de fichier
-}
-
-// Fonction pour changer la texture d'un ou plusieurs objets
-function changeTexture(objects, textureURL) {
-    loadTexture(textureURL, (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(2, 2);  // Répétition de la texture pour un meilleur rendu sur les grandes surfaces
-        texture.generateMipmaps = true;
-        texture.minFilter = THREE.LinearMipMapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-
-        objects.forEach(object => {
-            if (object) {
-                object.material.map = texture;  // Appliquer la nouvelle texture
-                object.material.needsUpdate = true;  // Marquer le matériau pour mise à jour
-            }
-        });
-
-        renderer.render(scene, camera);  // Rendu de la scène après changement de texture
-    }, textureURL);  // Si erreur, réutiliser la même URL pour retenter le chargement
-}
-
-// Fonction pour changer la texture du sol
-function changeFloorTexture(textureURL) {
-    changeTexture([floor], textureURL);
-}
-
-// Fonction pour changer la texture du mur de face
-function changeFrontWallTexture(textureURL) {
-    changeTexture([walls[0]], textureURL);  // Mur de face est stocké à l'indice 0
-}
-
-// Fonction pour changer la texture du mur gauche
-function changeLeftWallTexture(textureURL) {
-    changeTexture([walls[1]], textureURL);  // Mur gauche est stocké à l'indice 1
-}
-
-// Fonction pour gérer le redimensionnement de la fenêtre
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;  // Mettre à jour le ratio d'aspect
-    camera.updateProjectionMatrix();  // Mettre à jour la matrice de projection de la caméra
-    renderer.setSize(window.innerWidth, window.innerHeight);  // Redimensionner le renderer
-}
-
-// Gestionnaires d'événements pour les mouvements de la souris
+// Fonction pour gérer les mouvements de la souris
 function onMouseDown(event) {
     isDragging = true;
     previousMousePosition = {
@@ -234,8 +96,8 @@ function onMouseMove(event) {
 
         const deltaRotationQuaternion = new THREE.Quaternion()
             .setFromEuler(new THREE.Euler(
-                deltaMove.y * moveSpeed,
-                deltaMove.x * moveSpeed,
+                deltaMove.y * 0.01,
+                deltaMove.x * 0.01,
                 0,
                 'XYZ'
             ));
@@ -253,12 +115,54 @@ function onMouseUp() {
     isDragging = false;
 }
 
-// Initialisation de la scène et démarrage de l'animation
+// Fonction pour gérer les mouvements tactiles
+function onTouchStart(event) {
+    if (event.touches.length === 1) {
+        touchStartPosition = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY
+        };
+        isDragging = true;
+    }
+}
+
+function onTouchMove(event) {
+    if (isDragging && event.touches.length === 1) {
+        const touchCurrentPosition = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY
+        };
+
+        const deltaMove = {
+            x: touchCurrentPosition.x - touchStartPosition.x,
+            y: touchCurrentPosition.y - touchStartPosition.y
+        };
+
+        const deltaRotationQuaternion = new THREE.Quaternion()
+            .setFromEuler(new THREE.Euler(
+                deltaMove.y * 0.01,
+                deltaMove.x * 0.01,
+                0,
+                'XYZ'
+            ));
+
+        camera.quaternion.multiplyQuaternions(deltaRotationQuaternion, camera.quaternion);
+
+        touchStartPosition = touchCurrentPosition;
+    }
+}
+
+function onTouchEnd() {
+    isDragging = false;
+}
+
+// Fonction d'animation continue
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();  // Mise à jour des contrôles
+    renderer.render(scene, camera);
+}
+
+// Initialisation et démarrage
 init();
 animate();
-
-// Fonction pour l'animation continue de la scène
-function animate() {
-    requestAnimationFrame(animate);  // Boucle d'animation
-    renderer.render(scene, camera);  // Rendu de la scène à chaque frame
-}

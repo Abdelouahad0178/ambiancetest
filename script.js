@@ -7,7 +7,7 @@ const moveSpeed = 0.01; // Déclaration de moveSpeed, vitesse de déplacement
 // Définition des textures par défaut pour le sol et les murs
 const defaultTextures = {
     floor: 'images/CORE_DECOR_COLD_60X60.jpg',  // Texture par défaut pour le sol
-    wall1: 'images/1Chalet_Cervinia-honey_20_122cm.jpg',  // Texture par défaut pour le mur de face (dominant)
+    wall1: 'images/1cream-rect-100x100-cm.jpg',  // Texture par défaut pour le mur de face (dominant)
     wall2: 'images/DUC_BLANC_BURGUINI_S.T_89.8x269.8.jpg'  // Texture par défaut pour le mur gauche (1/2 largeur)
 };
 

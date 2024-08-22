@@ -1,44 +1,32 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualisateur 3D de Pièce</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+    <title>3D Scene with Three.js</title>
+    <link rel="stylesheet" href="style.css"> <!-- Lien vers le fichier CSS -->
 </head>
 <body>
-    <header>
-        <h1>Visualisateur 3D de Pièce</h1>
-    </header>
 
-    <main>
-        <div id="scene-container" aria-label="Scène 3D de la pièce"></div>
+    <h1>Visualisation 3D</h1>
+    <div id="scene-container"></div>
+    <div class="controls">
+        <button id="floorTexture1">Changer Texture Sol</button>
+        <button id="wallTexture1">Changer Texture Mur de Face</button>
+        <button id="wallTexture2">Changer Texture Mur Gauche</button>
+    </div>
 
-        <div class="controls">
-            <h2>Contrôles de Texture</h2>
-            <div class="button-group">
-                <h3>Texture du Sol</h3>
-                <button id="floorTexture1">Texture Sol 1</button>
-                <button id="floorTexture2">Texture Sol 2</button>
-            </div>
-            <div class="button-group">
-                <h3>Texture des Murs</h3>
-                <button id="wallTexture1">Texture Murs 1</button>
-                <button id="wallTexture2">Texture Murs 2</button>
-            </div>
-            <div class="file-input-group">
-                <h3>Charger une Texture Personnalisée</h3>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
-        </div>
-    </main>
+    <!-- Importation de Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Importation de OrbitControls -->
+    <script type="module">
+        import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
+        window.OrbitControls = OrbitControls;
+    </script>
 
-    <footer>
-        <p>&copy; 2024 Visualisateur 3D de Pièce. Tous droits réservés.</p>
-    </footer>
-
+    <!-- Lien vers le fichier JavaScript -->
     <script src="script.js"></script>
+
 </body>
 </html>

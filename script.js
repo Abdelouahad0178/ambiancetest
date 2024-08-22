@@ -28,11 +28,11 @@ function init() {
     renderer.setPixelRatio(window.devicePixelRatio);
     document.getElementById('scene-container').appendChild(renderer.domElement);
 
-    // Lumières de la scène
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    // Augmenter l'intensité des lumières de la scène
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);  // Intensité augmentée à 1
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);  // Intensité augmentée à 1
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
@@ -54,10 +54,21 @@ function disableButtons(disabled) {
     buttons.forEach(id => document.getElementById(id).disabled = disabled);
 }
 
+function createMaterial(texture) {
+    // Créer un matériau plus lumineux pour les surfaces
+    return new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.4,  // Réduire la rugosité pour un effet plus brillant
+        metalness: 0.1,  // Ajouter un peu de métallisation pour refléter plus de lumière
+        emissive: new THREE.Color(0x202020),  // Couleur émissive pour ajouter un peu plus de luminosité
+        emissiveIntensity: 0.3  // Intensité de la lumière émise
+    });
+}
+
 function createFloor(texture) {
-    // Créer le sol avec la texture chargée
+    // Créer le sol avec le matériau ajusté
     const floorGeometry = new THREE.PlaneGeometry(5, 5);
-    const floorMaterial = new THREE.MeshStandardMaterial({ map: texture });
+    const floorMaterial = createMaterial(texture);
     floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
@@ -68,33 +79,33 @@ function createFloor(texture) {
 }
 
 function createFrontWall(texture) {
-    // Créer le mur de face avec la texture chargée
-    const wallGeometry = new THREE.PlaneGeometry(5, 5); // Taille pleine pour le mur de face
-    const wallMaterial = new THREE.MeshStandardMaterial({ map: texture });
+    // Créer le mur de face avec le matériau ajusté
+    const wallGeometry = new THREE.PlaneGeometry(5, 5);
+    const wallMaterial = createMaterial(texture);
 
     const wall = new THREE.Mesh(wallGeometry, wallMaterial);
     wall.position.y = 2.5;
-    wall.position.z = -2.5;  // Mur arrière
+    wall.position.z = -2.5;
     scene.add(wall);
 
-    walls[0] = wall;  // Assigner le mur de face à l'indice 0 de walls
+    walls[0] = wall;
 
     renderer.render(scene, camera);
 }
 
 function createLeftWall(texture) {
-    // Créer le mur à gauche avec la texture chargée
-    const wallGeometry = new THREE.PlaneGeometry(2.5, 5); // 1/2 largeur, même hauteur que le mur de face
-    const wallMaterial = new THREE.MeshStandardMaterial({ map: texture });
+    // Créer le mur gauche avec le matériau ajusté
+    const wallGeometry = new THREE.PlaneGeometry(2.5, 5);
+    const wallMaterial = createMaterial(texture);
 
     const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.y = 2.5; // Même hauteur
-    wall.position.x = -2.5;  // Positionner à côté du mur de face
-    wall.position.z = -1.1;  // Légèrement devant le mur de face pour éviter l'espace
-    wall.rotation.y = Math.PI / 2.2;  // Angle légèrement supérieur à 90 degrés (environ 72 degrés)
+    wall.position.y = 2.5;
+    wall.position.x = -2.5;
+    wall.position.z = -0.01;
+    wall.rotation.y = Math.PI / 2.5;
     scene.add(wall);
 
-    walls[1] = wall;  // Assigner le mur de gauche à l'indice 1 de walls
+    walls[1] = wall;
 
     renderer.render(scene, camera);
 }
